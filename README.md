@@ -2,9 +2,7 @@
 
 Interactive lecture notes on density functional theory (DFT) for materials modelling. The notes follow the development of the theory from the many-body Schrödinger equation to the Kohn-Sham scheme, and then to practical calculations and applications.
 
-**Live site:** https://YOUR-USERNAME.github.io/introduction-to-dft/
-
-Replace `YOUR-USERNAME` with your GitHub username.
+**Live site:** https://B0b1nn.github.io/introduction-to-dft/
 
 ## Contents
 
