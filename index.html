@@ -1,50 +1,37 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>DFT ile malzeme modelleme: ders notu</title>
+<title>DFT lecture notes, Part 2: forces, functionals, pseudopotentials, band gaps</title>
 <style>
 :root{--bg:#f3f5f7;--card:#fff;--ink:#16202b;--mute:#5a6978;--line:#d5dce3;--acc:#2b59c3;--hot:#b8691a;--ok:#1f7a55;--bad:#b3392f}
 @media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0f1722;--card:#17212f;--ink:#e6ecf2;--mute:#9aa8b6;--line:#2a3646;--acc:#7fa6ff;--hot:#e0a15a;--ok:#5cc79a;--bad:#ef7f74}}
 *{box-sizing:border-box}
-html{scroll-behavior:smooth}
 body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
 main{max-width:760px;margin:0 auto;padding:0 20px 80px}
-h1,h2,h3{font-family:Georgia,"Times New Roman",serif;line-height:1.2;font-weight:700}
-h1{font-size:clamp(2rem,6vw,3.1rem);margin:.2em 0 .3em}
-h2{font-size:1.7rem;margin:0 0 .5em}
-h3{font-size:1.15rem;margin:1.6em 0 .4em}
-header{padding:56px 0 28px;border-bottom:1px solid var(--line)}
+h1,h2,h3{font-family:Georgia,"Times New Roman",serif;line-height:1.2}
+h1{font-size:clamp(1.9rem,6vw,2.8rem);margin:.2em 0 .3em}
+h2{font-size:1.6rem;margin:0 0 .5em}
+h3{font-size:1.12rem;margin:1.5em 0 .4em}
+header{padding:48px 0 24px;border-bottom:1px solid var(--line)}
 header p{color:var(--mute);max-width:60ch}
 nav{display:flex;flex-wrap:wrap;gap:8px 18px;padding:14px 0;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);border-bottom:1px solid var(--line);z-index:5;font-size:.92rem}
 nav a{color:var(--mute);text-decoration:none}
 nav a:hover,nav a:focus-visible{color:var(--acc);text-decoration:underline}
-section{padding:44px 0 8px;scroll-margin-top:60px}
+section{padding:40px 0 6px;scroll-margin-top:60px}
 p{max-width:68ch}
 .eq{font-family:Georgia,serif;font-style:italic;background:var(--card);border-left:4px solid var(--acc);padding:12px 16px;margin:16px 0;overflow-x:auto;white-space:nowrap}
 .box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px;margin:20px 0}
 .box h3{margin-top:0}
 label{display:block;font-size:.92rem;color:var(--mute);margin:12px 0 4px}
-input[type=range],select{width:100%;accent-color:var(--acc)}
-select{padding:8px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:6px;font:inherit}
-.big{font:700 clamp(1.6rem,5vw,2.4rem)/1.1 Georgia,serif;color:var(--bad)}
+input[type=range]{width:100%;accent-color:var(--acc)}
+.big{font:700 clamp(1.4rem,5vw,2.1rem)/1.1 Georgia,serif;color:var(--acc)}
+.tag{font-size:.85rem;color:var(--mute)}
 .good{color:var(--ok)}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-@media(max-width:560px){.row{grid-template-columns:1fr}}
-.step{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;padding:12px 0;border-top:1px solid var(--line)}
-.step:first-of-type{border-top:0}
-.step .k{font:700 .95rem Georgia,serif;color:var(--acc);min-width:7.5em}
-.step .lim{grid-column:2;color:var(--mute);font-size:.93rem}
-.chain{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font:italic 1.2rem Georgia,serif;margin:14px 0}
-.chain span.a{color:var(--mute);font-style:normal;font-size:.9rem}
-.bar{height:34px;border-radius:6px;background:var(--acc);color:#fff;display:flex;align-items:center;padding:0 12px;font-size:.92rem;margin:8px 0;white-space:nowrap;overflow:hidden}
 table{width:100%;border-collapse:collapse;font-size:.95rem;background:var(--card)}
 th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
-th{font-family:Georgia,serif}
 .wrap{overflow-x:auto}
-svg{width:100%;height:auto;display:block}
-.tag{font-size:.85rem;color:var(--mute)}
 footer{margin-top:50px;padding-top:18px;border-top:1px solid var(--line);color:var(--mute);font-size:.88rem}
 :focus-visible{outline:3px solid var(--acc);outline-offset:2px}
 </style>
@@ -52,167 +39,111 @@ footer{margin-top:50px;padding-top:18px;border-top:1px solid var(--line);color:v
 <body>
 <main>
 <header>
-<h1>Malzemeleri kuantum mekaniğiyle hesaplamak: DFT</h1>
-<p>Yoğunluk Fonksiyoneli Teorisi (DFT), bir malzemenin elektronik yapısını ve makroskobik özelliklerini ampirik parametre kullanmadan, yalnızca atom numaralarından ve kuantum mekaniği yasalarından hesaplamayı mümkün kılar. Bu notlar, teorinin kavramsal gelişimini çok-cisimli Schrödinger probleminden Kohn-Sham formülasyonuna ve uygulamalara kadar özetler.</p>
+<h1>DFT lecture notes, Part 2</h1>
+<p>Part 1 derived the Kohn-Sham equations and the SCF cycle. This part covers what is needed to turn them into real predictions: forces and equilibrium structures, the choice of exchange-correlation functional, pseudopotentials, and the most notorious failure of standard DFT, the band gap problem.</p>
 </header>
-<nav aria-label="Bölümler">
-<a href="#giris">Giriş</a><a href="#duvar">Üstel duvar</a><a href="#yaklasim">Yaklaşımlar</a><a href="#hk">Hohenberg-Kohn</a><a href="#ks">Kohn-Sham ve SCF</a><a href="#tarama">Hızlı tarama</a><a href="#sinir">Sınırlar</a>
+<nav aria-label="Sections">
+<a href="index.html">Part 1</a><a href="#forces">Forces</a><a href="#xc">Functionals</a><a href="#pp">Pseudopotentials</a><a href="#gap">Band gap problem</a><a href="#check">Checklist</a><a href="#gloss">Glossary</a>
 </nav>
 
-<section id="giris">
-<h2>Giriş: ilk ilkelerden malzeme modellemesi</h2>
-<p>Malzemeler = elektronlar + çekirdekler. Elektronlar çekirdeklere çekilir, birbirlerini iter; çekirdekler de birbirini iter. Bu Coulomb etkileşimleriyle yönetilen sistem kuantum mekaniğiyle ifade edildiğinde, malzemenin özellikleri ilkesel olarak elde edilebilir.</p>
-<p>Bu yönteme <b>ilk ilkelerden</b> (<i>ab initio</i>) modelleme denir: deneyden alınmış hiçbir ayar sayısı (ampirik parametre) kullanılmaz; yalnızca kuantum mekaniği ve periyodik tablo yeterlidir. Buna karşılık deney verisine eğri uydurmak <b>yukarıdan aşağıya</b> (top-down) yaklaşımdır.</p>
-<p>DFT'nin yaygın olmasının nedenleri: aynı yöntem molekülde, katıda, yüzeyde çalışır (<b>aktarılabilirlik</b>); denklemler basit bir tek-parçacık resmine iner (<b>sadelik</b>); sonuçlar deneyle yüzde birkaç içinde uyar (<b>güvenilirlik</b>).</p>
+<section id="forces">
+<h2>1. Forces and equilibrium structures</h2>
+<p>Part 1 held the nuclei fixed. To predict a structure we must let them move. Start from the full equation including nuclear kinetic energy −∑∇²<sub>I</sub>/2M<sub>I</sub> and nuclear repulsion. Because nuclei are much heavier than electrons, they stay close to their equilibrium positions while the electrons move around them. This is the <b>adiabatic (Born-Oppenheimer) approximation</b>: for each set of nuclear positions the electrons sit in their ground state, whose energy is E(R₁,…,R<sub>M</sub>).</p>
+<p>The nuclei then move on an effective potential energy surface:</p>
+<div class="eq">U(R₁,…,R<sub>M</sub>) = ½ ∑<sub>I≠J</sub> Z<sub>I</sub>Z<sub>J</sub>/|R<sub>I</sub> − R<sub>J</sub>| + E(R₁,…,R<sub>M</sub>)</div>
+<p>The nuclear wavefunction is far more compact than the electronic one, so for equilibrium structures (except for the lightest elements such as hydrogen) the nuclei can be treated as classical point particles. Replacing the nuclear momentum by its classical counterpart gives Newton's law:</p>
+<div class="eq">M<sub>I</sub> d²R<sub>I</sub>/dt² = −∂U/∂R<sub>I</sub> = F<sub>I</sub></div>
+<p>The force on a nucleus can be evaluated with classical electrostatics: it is the Coulomb force exerted on that nucleus by the other nuclei and by the electron density n(r) (the Hellmann-Feynman, or electrostatic, theorem). So one SCF calculation gives both the energy and all forces.</p>
+<h3>Finding the structure</h3>
+<p>The equilibrium structure is where the net force on every nucleus vanishes, F<sub>I</sub> = 0. In practice one runs an SCF calculation, evaluates the forces, moves the atoms downhill in energy, and repeats until the forces are below a threshold. Cell shape and volume can be optimised too. This is why DFT can predict lattice parameters and bond lengths without experimental input.</p>
 </section>
 
-<section id="duvar">
-<h2>Çok-cisimli problem ve üstel duvar</h2>
-<p>Her şeyi içeren denklem çok-cisimli Schrödinger denklemidir. Çekirdekler elektronlardan en az 1836 kat ağır olduğu için onları sabit kabul ederiz (sabitlenmiş çekirdek, yani Born-Oppenheimer yaklaşımı). Kalan denklem sadece elektronlar içindir:</p>
-<div class="eq">[ −½ ∑ ∇ᵢ² + ∑ Vₙ(rᵢ) + ½ ∑ 1/|rᵢ − rⱼ| ] Ψ(r₁,…,r_N) = E Ψ</div>
-<p>Sorun Ψ'nin kaç sayı gerektirdiğidir. Ψ her parçacığın konumuna aynı anda bağlıdır; uzay ızgaraya bölündüğünde her parçacık için N<sub>p</sub> nokta elde edilir ve toplam N<sub>p</sub><sup>(parçacık sayısı)</sup> sayının saklanması gerekir. Aşağıdaki hesaplayıcıda bu ölçekleme silisyum birim hücresi için incelenebilir.</p>
+<section id="xc">
+<h2>2. Choosing an exchange-correlation functional</h2>
+<p>The Hohenberg-Kohn theorem guarantees that an exact functional exists but does not say what it is. Every practical calculation therefore uses an approximation, and results depend on the choice, so the functional used must always be stated (not just "a DFT calculation").</p>
+<div class="wrap"><table>
+<tr><th>Level</th><th>Ingredients</th><th>Comments</th></tr>
+<tr><td>LDA</td><td>Local density n(r) only; each volume element treated as a homogeneous electron gas.</td><td>Simple and surprisingly good for structures. Its V<sub>xc</sub> is a continuous function of density (relevant to band gaps, Section 4).</td></tr>
+<tr><td>GGA</td><td>n(r) and its gradient |∇n|.</td><td>Many different GGAs exist because the gradient can be included in many ways. Widely used in solids: PW91 and PBE. More information does not guarantee higher accuracy.</td></tr>
+<tr><td>Beyond GGA</td><td>Additional physical information.</td><td>A hierarchy of functionals gradually adds more detail; treat these as refinements, with higher cost.</td></tr>
+</table></div>
+<p>Two corrections that sit on top of Kohn-Sham DFT are worth knowing by name: <b>GW</b> quasiparticle corrections for band gaps, and <b>dynamical mean-field theory (DMFT)</b> for Mott-Hubbard insulators with localised d or f electrons. Both start from the Kohn-Sham eigenvalues and eigenfunctions.</p>
+</section>
+
+<section id="pp">
+<h2>3. Plane waves, cutoffs and pseudopotentials</h2>
+<p>Periodic solids are modelled with a supercell. By Bloch's theorem each solution is a plane wave times a function with the cell's periodicity, and the periodic part is expanded in plane waves exp[iG·r]. The expansion is truncated at a cutoff energy E<sub>cut</sub> = ħ²G²<sub>cut</sub>/2m, which must be converged.</p>
+<p>The difficulty is the core electrons. Tightly bound core states oscillate on very short length scales and would need a very large cutoff. But bonding and most material properties are governed by the valence electrons. A <b>pseudopotential</b> replaces the core electrons by a smooth effective potential, so only the valence electrons are treated explicitly. This is the <b>frozen core approximation</b>; calculations without it are called <b>all-electron</b> and are used far less widely.</p>
+<ul>
+<li><b>Transferability:</b> a pseudopotential made from an isolated atom should work in any chemical environment without adjustment. DFT codes ship libraries with one for most elements.</li>
+<li><b>Hard vs soft:</b> a hard pseudopotential needs a high cutoff, a soft one a low cutoff. Vanderbilt's ultrasoft pseudopotentials (USPPs) need substantially lower cutoffs, at the price of more empirical construction parameters.</li>
+<li>Each pseudopotential defines a minimum cutoff for the atoms it describes. When energies of different systems are compared (for example fcc Pd, fcc Cu and a bcc CuPd alloy), use the same, highest required cutoff in all of them.</li>
+</ul>
+</section>
+
+<section id="gap">
+<h2>4. Band structures and the band gap problem</h2>
+<p>The Kohn-Sham eigenvalues εᵢ(k) form the band structure. In a metal the next available state lies infinitesimally above the highest occupied one; in a semiconductor or insulator there is a finite energy difference, the band gap. In Kohn-Sham theory:</p>
+<div class="eq">E<sub>g</sub><sup>KS</sup> = ε<sub>CBB</sub> − ε<sub>VBT</sub> &nbsp; (conduction-band bottom minus valence-band top)</div>
+<p>Experiments measure something different: the <b>quasiparticle (electrical) gap</b>, built from total energies of the neutral system and of the system with one electron removed or added (E<sub>N−1</sub>, E<sub>N</sub>, E<sub>N+1</sub>):</p>
+<div class="eq">E<sub>g</sub><sup>qp</sup> = (E<sub>N−1</sub> − E<sub>N</sub>) − (E<sub>N</sub> − E<sub>N+1</sub>) = IP − EA</div>
+<p>The first bracket is the ionisation potential (work function in a solid), the second the electron affinity. For a small molecule one can compute this directly from three total-energy calculations (the ΔSCF method). In a solid, adding one electron to about 10²⁰ changes the density by a negligible amount, and taking that limit gives:</p>
+<div class="eq">E<sub>g</sub><sup>qp</sup> = E<sub>g</sub><sup>KS</sup> + Δ<sub>xc</sub> , &nbsp; Δ<sub>xc</sub> = lim [V<sub>xc</sub>(n + Δn) − V<sub>xc</sub>(n − Δn)]</div>
+<p>With the exact functional, V<sub>xc</sub> jumps discontinuously when an electron is added, so Δ<sub>xc</sub> ≠ 0. LDA, by construction, has a continuous V<sub>xc</sub>, so Δ<sub>xc</sub> = 0 and the gap cannot come out right. As a rule of thumb, Kohn-Sham gaps underestimate measured ones by about 40%; errors above 1 eV are common. GW quasiparticle calculations built on the Kohn-Sham solution fix most of this.</p>
 <div class="box">
-<h3>Üstel duvar hesaplayıcısı</h3>
-<label for="pc">Parçacık sayısı (elektron + çekirdek): <b id="pcv">10</b></label>
-<input type="range" id="pc" min="1" max="20" value="10">
-<label for="gr">Izgara aralığı (birim hücre sabit kalır)</label>
-<select id="gr"><option value="5000">0,2 Å → 5.000 nokta</option><option value="40000" selected>0,1 Å → 40.000 nokta</option><option value="320000">0,05 Å → 320.000 nokta</option></select>
-<p style="margin:16px 0 0">Ψ için gereken karmaşık sayı: <span class="big" id="wall">10<sup>46</sup></span></p>
-<p style="margin:6px 0 0">DFT'de saklanan elektron yoğunluğu n(r): <b class="good" id="dft">40.000</b> sayı</p>
+<h3>Quasiparticle gap from total energies</h3>
+<p class="tag">Made-up numbers for illustration (ΔSCF idea for a small system). The "40%" estimate is only a rule of thumb.</p>
+<label for="ip">Ionisation potential E<sub>N−1</sub> − E<sub>N</sub>: <b id="ipv">8.0</b> eV</label>
+<input type="range" id="ip" min="4" max="14" step="0.1" value="8">
+<label for="ea">Electron affinity E<sub>N</sub> − E<sub>N+1</sub>: <b id="eav">2.0</b> eV</label>
+<input type="range" id="ea" min="0" max="5" step="0.1" value="2">
+<p style="margin:14px 0 0">Quasiparticle gap IP − EA: <span class="big" id="gq">6.0 eV</span></p>
+<p style="margin:6px 0 0">A Kohn-Sham gap about 40% too small would read roughly <b id="gk" class="good">3.6 eV</b>.</p>
 </div>
+<p>Practical consequence: standard DFT should not be the final judge when exact absorption or emission thresholds matter (LEDs, solar cells, photodiodes); post-DFT corrections are needed there. Also, for optical spectra the electronic excitations are outside ground-state DFT altogether.</p>
 </section>
 
-<section id="yaklasim">
-<h2>Tek-parçacık yaklaşımlarının gelişimi</h2>
-<div class="step"><div class="k">Bağımsız elektron</div><div>Elektronlar arası itme ihmal edilir; Ψ = φ₁φ₂…φ_N ve E = ∑εᵢ yazılır.</div><div class="lim">Eksiği: elektron-elektron itmesi tamamen yok sayılır.</div></div>
-<div class="step"><div class="k">Pauli ve Slater</div><div>Elektronlar özdeş fermiyondur; yer değiştirince Ψ işaret değiştirmeli. Bunu Slater determinantı sağlar. Yoğunluk n(r) = ∑|φᵢ(r)|² olur.</div></div>
-<div class="step"><div class="k">Hartree (ortalama alan)</div><div>Her elektron, diğerlerinin oluşturduğu ortalama yük bulutunda hareket eder: V<sub>H</sub>(r) = ∫ n(r′)/|r − r′| dr′ (Poisson denklemi).</div><div class="lim">Eksiği: değiş-tokuş (V<sub>X</sub>) ve korelasyon (V<sub>c</sub>) yok.</div></div>
-<div class="step"><div class="k">Hartree-Fock</div><div>Pauli ilkesinden gelen değiş-tokuş potansiyeli V<sub>X</sub>(r, r′) eklenir. Bu potansiyel yerel değildir: r noktasındaki elektronu hesaplamak için tüm r′ noktalarını toplaman gerekir.</div><div class="lim">Eksiği: korelasyon (elektronların birbirinden kaçınması) yok. Bağ enerjilerini fazla, bant aralığını çok büyük bulur.</div></div>
-<div class="step"><div class="k">Kohn-Sham (DFT)</div><div>Dalga fonksiyonu yerine yoğunlukla çalışılır. Aşağıdaki iki bölümde.</div></div>
-</section>
-
-<section id="hk">
-<h2>Hohenberg-Kohn (1964): 3N değişkenden 3'e</h2>
-<p><b>Teorem 1.</b> Taban durumundaki tüm özellikler (toplam enerji dahil) yalnızca elektron yoğunluğu n(r) tarafından belirlenir. Zincir şöyledir:</p>
-<div class="chain"><span>n(r)</span><span class="a">→</span><span>Vₙ(r)</span><span class="a">→</span><span>Ψ</span><span class="a">→</span><span>E</span></div>
-<p><b>Teorem 2.</b> Gerçek taban durumu yoğunluğu n₀, enerji fonksiyoneli E[n]'i minimum yapan yoğunluktur (δE/δn = 0).</p>
-<h3>İspatın fikri (olmayana ergi)</h3>
-<p>Aynı n(r)'yi veren iki farklı potansiyelin (Vₙ ≠ Vₙ′) var olduğu varsayılsın. Varyasyonel ilke iki yönde uygulandığında iki eşitsizlik elde edilir:</p>
-<div class="eq">E + ∫ n (Vₙ′ − Vₙ) dr &gt; E′ &nbsp; ve &nbsp; E′ + ∫ n (Vₙ − Vₙ′) dr &gt; E</div>
-<p>Taraf tarafa toplandığında integraller birbirini götürür ve E + E′ &gt; E + E′ çelişkisi doğar. Dolayısıyla varsayım geçersizdir: yoğunluk, dış potansiyeli tek anlamlı olarak belirler.</p>
-<p>Not: <b>fonksiyonel türev</b> (δF/δn), tüm uzayda tanımlı bir fonksiyon n(r) hafifçe değiştiğinde toplam enerjinin nasıl tepki verdiğini ölçer. Sıradan türev bir sayının değişimine bakar, bu ise bir fonksiyonun değişimine.</p>
-</section>
-
-<section id="ks">
-<h2>Kohn-Sham (1965) ve SCF döngüsü</h2>
-<p>HK teoremi enerjinin n'ye bağlı olduğunu söyler ama formülü vermez. Kohn ve Sham gerçek, etkileşen sistemi <b>aynı n(r)'ye sahip hayali, etkileşmeyen</b> bir sisteme eşledi. Bilinmeyen her şey tek bir terimde toplandı: değiş-tokuş ve korelasyon enerjisi E<sub>xc</sub>[n].</p>
-<div class="eq">[ −½∇² + Vₙ(r) + V_H(r) + V_xc(r) ] φᵢ(r) = εᵢ φᵢ(r) &nbsp;,&nbsp; V_xc = δE_xc/δn</div>
-<p>E<sub>xc</sub>'nin tam biçimi bilinmez. En basit yaklaşım <b>LDA</b>'dır: her küçük hacmi, o noktadaki yoğunlukla homojen bir elektron gazı (HEG) say. Değiş-tokuş terimi analitiktir: V<sub>x</sub> = −(3/π)<sup>1/3</sup> n<sup>1/3</sup>. Korelasyon terimi Ceperley-Alder'in kuantum Monte Carlo hesaplarına dayanır (Perdew-Zunger parametrizasyonu, Wigner-Seitz yarıçapı r<sub>s</sub> cinsinden).</p>
-<h3>Öz-uyumlu alan (SCF) yöntemi</h3>
-<p>Potansiyel yoğunluğa, yoğunluk dalga fonksiyonlarına, dalga fonksiyonları ise potansiyele bağlıdır. Bu nedenle problem, doğrusal olmayan bir öz-uyumlu döngü (<b>SCF</b>) ile çözülür:</p>
+<section id="check">
+<h2>5. Checklist for a trustworthy calculation</h2>
 <ol>
-<li>Çekirdek konumlarından Vₙ belirlenir; atomik yoğunlukların toplamıyla başlangıç n(r) tahmini oluşturulur.</li>
-<li>V<sub>H</sub> (Poisson denklemi) ve V<sub>xc</sub> hesaplanır; V<sub>tot</sub> = Vₙ + V<sub>H</sub> + V<sub>xc</sub> oluşturulur.</li>
-<li>Kohn-Sham denklemi çözülerek φᵢ ve εᵢ elde edilir.</li>
-<li>Yeni yoğunluk: n<sub>yeni</sub> = ∑|φᵢ|².</li>
-<li>|n<sub>yeni</sub> − n<sub>eski</sub>| &lt; tolerans mı? Koşul sağlanırsa döngü sonlanır ve taban durumu yoğunluğu ile E elde edilir. Sağlanmazsa yeni ve eski yoğunluk belirli bir oranda karıştırılarak (mixing) 2. adıma dönülür.</li>
+<li>Choose and <b>state the functional</b> (LDA, PBE, ...).</li>
+<li><b>Converge k points</b> before a series of calculations; report them. Compare supercells at comparable k-point density.</li>
+<li><b>Converge E<sub>cut</sub></b>; use one common cutoff when comparing energies.</li>
+<li>Check the <b>pseudopotentials</b> are appropriate for the elements and the property.</li>
+<li>Make sure the <b>SCF cycle converges</b> to a tight tolerance, then relax until forces are small.</li>
+<li>Ask whether the property is a <b>ground-state property</b>. If it is a band gap, an excited-state, van der Waals or strongly correlated d/f problem, expect a systematic error and consider GW, DFT+U/DMFT or dispersion corrections.</li>
 </ol>
-<div class="box">
-<h3>Karıştırma oranı yakınsamayı nasıl etkiler?</h3>
-<p class="tag">Öğretici model: gerçek bir hesap değildir, sadece fikri gösterir. Hata her turda sabit bir oranla çarpılır.</p>
-<label for="mx">Karıştırma oranı (α): <b id="mxv">0,30</b></label>
-<input type="range" id="mx" min="0.05" max="1.5" step="0.05" value="0.3">
-<svg id="plot" viewBox="0 0 400 190" role="img" aria-label="SCF hata grafiği"></svg>
-<p id="scfmsg" style="margin:6px 0 0"></p>
-</div>
 </section>
 
-<section id="tarama">
-<h2>Uygulama: deney öncesi hesaplamalı eleme</h2>
-<p>DFT'nin gücü yalnızca tek bir malzemeyi hesaplamak değil, binlercesini sanal ortamda taramaktır. Örnek: hidrojen evrim reaksiyonu (2H⁺ + 2e⁻ → H₂) için katalizör. Tek bir tanımlayıcıya (descriptor) bakılır: hidrojenin yüzeye adsorpsiyon serbest enerjisi ΔG<sub>H</sub>. İdeal katalizörde ΔG<sub>H</sub> sıfıra yakındır (Parsons ilkesi).</p>
-<div class="box">
-<h3>ΔG<sub>H</sub> değerinin katalitik aktiviteye etkisi</h3>
-<label for="dg">ΔG<sub>H</sub> = <b id="dgv">−0,10</b> eV</label>
-<input type="range" id="dg" min="-0.6" max="0.6" step="0.05" value="-0.1">
-<p id="dgm" style="margin:8px 0 0"></p>
-<p class="tag" style="margin:6px 0 0">Referans: saf platin (Pt), ΔG<sub>H</sub> ≈ −0,1 eV ile "yanardağ grafiğinin" tepesindedir.</p>
-</div>
-<h3>Greeley ve ark. (2006) tarama hunisi</h3>
-<div class="bar" style="width:100%">736 ikili alaşım (16 geçiş metali, 1:3 yüzey oranı)</div>
-<div class="bar" style="width:62%">49 aday: |ΔG<sub>H</sub>| ≤ 0,1 eV (aktivite)</div>
-<div class="bar" style="width:34%">Birkaç aday: korozyona dayanıklı (kararlılık)</div>
-<p>687 verimsiz alaşım tek bir deney yapılmadan elendi. Kararlılık için ayrışma, oksitlenme ve asidik ortamda çözünme enerjileri de DFT ile hesaplandı. Sonuçta öne çıkan <b>BiPt</b> laboratuvarda üretildi ve deneyde saf Pt'den hem daha aktif hem daha kararlı çıktı.</p>
-<h3>Diğer vaka örnekleri</h3>
+<section id="gloss">
+<h2>Glossary</h2>
 <div class="wrap"><table>
-<tr><th>Alan</th><th>Ne bulundu?</th></tr>
-<tr><td>Nanoyapı (Raty 2003)</td><td>1-4 nm elmas parçacıklarda yüzeyde sp³ bağları sp² grafite dönüşür ("bucky diamond"). Hesaplanan X-ışını soğurma tepeleri (285 ve 287 eV) deneyle uyumlu.</td></tr>
-<tr><td>Süperiletken MgB₂ (Choi 2002)</td><td>Hesaplanan T<sub>c</sub> = 39,4 K, deneydeki 39 K ile uyumlu.</td></tr>
-<tr><td>Dünya çekirdeği (Alfè 1999)</td><td>~350 GPa'da ε-Fe erime eğrisi hesaplandı; iç çekirdek sınırı sıcaklığı en az 6.670 K.</td></tr>
-<tr><td>Si'de çatlak (Kermode 2008)</td><td>174.752 atomluk modelde çatlak ucu DFT, uzak bölge klasik kuvvetlerle (QM/MM) hesaplandı.</td></tr>
+<tr><th>Term</th><th>Meaning</th></tr>
+<tr><td>Ab initio</td><td>Calculation from first principles, without fitted parameters.</td></tr>
+<tr><td>Atomic units</td><td>ħ = mₑ = e = 4πε₀ = 1; length in bohr, energy in hartree.</td></tr>
+<tr><td>Born-Oppenheimer</td><td>Nuclei treated as slow; electrons stay in their ground state for each nuclear geometry.</td></tr>
+<tr><td>Exchange energy</td><td>Energy lowering from the antisymmetry of the wavefunction (Pauli principle).</td></tr>
+<tr><td>Correlation energy</td><td>Remaining many-electron effects beyond exchange (electrons avoiding each other).</td></tr>
+<tr><td>Functional</td><td>A map from a function (e.g. n(r)) to a number (e.g. energy).</td></tr>
+<tr><td>HEG</td><td>Homogeneous electron gas, the model system behind LDA.</td></tr>
+<tr><td>SCF</td><td>Self-consistent field: iterate until input and output density agree.</td></tr>
+<tr><td>Supercell, k points</td><td>Periodic simulation cell; sampling points in the Brillouin zone.</td></tr>
+<tr><td>Frozen core</td><td>Core electrons fixed and replaced by a pseudopotential.</td></tr>
+<tr><td>Quasiparticle gap</td><td>Experimental electrical gap, IP − EA.</td></tr>
 </table></div>
-<h3>Denge yapısının belirlenmesi</h3>
-<p>Çekirdekler klasik nokta parçacık sayılır. Hellmann-Feynman kuvveti F<sub>I</sub> = −∂U/∂R<sub>I</sub> ile bulunur; denge, her çekirdekteki net kuvvetin sıfır olduğu yapıdır. Born-Oppenheimer yaklaşımının hatası (m<sub>e</sub>/M)<sup>1/4</sup> mertebesindedir (örneğin Pb için yaklaşık %4).</p>
 </section>
-
-<section id="sinir">
-<h2>DFT'nin kapsamı ve sınırlılıkları</h2>
-<div class="wrap"><table>
-<tr><th>İyi hesaplar</th><th>Sorunlu alanlar ve çözümler</th></tr>
-<tr><td>Denge yapıları, bağ uzunlukları, örgü sabitleri</td><td><b>Bant aralığı:</b> yarıiletken ve yalıtkanlarda sistematik olarak olduğundan küçük hesaplanır (%30-50 ölçeğinde). Çözüm: GW düzeltmesi. LED ve güneş pili tasarımında düzeltmesiz DFT nihai karar vermez.</td></tr>
-<tr><td>Bağ ve kohezif enerjiler</td><td><b>Mott-Hubbard yalıtkanları:</b> d/f elektronlu sistemleri yanlışlıkla metal bulabilir. Çözüm: DFT+U, DMFT.</td></tr>
-<tr><td>Titreşimler, fononlar (Raman, nötron)</td><td><b>van der Waals:</b> standart LDA/GGA zayıf, uzun menzilli etkileşimi tanımlayamaz.</td></tr>
-<tr><td>Metal ve yarıiletken bant yapıları (taban durumu)</td><td><b>Uyarılmış durumlar:</b> DFT taban durumu teorisidir. Optik soğurma için TDDFT gerekir.</td></tr>
-</table></div>
-<p>Kapsam: DFT indirgemeci bir çerçeve olarak yeterli değildir. P. W. Anderson'un "More is different" sözü gibi, atom sayısı artınca alt ölçeklerde olmayan yeni olgular belirir. Örneğin ATP sentazın F₀ motoru 16.649 atomdan oluşur; sadece atom listesinden DFT ile yapısını tahmin etmek konfigürasyon uzayı yüzünden mümkün değildir.</p>
-<h3>Özet</h3>
-<p>Üstel duvar (10⁴⁶ sayı) → Hohenberg-Kohn: n(r) yeter → Kohn-Sham: etkileşmeyen hayali sistem + E<sub>xc</sub> → LDA ile yaklaş → SCF ile çöz → kuvvetlerle yapıyı bul → yüksek geçişli taramayla yeni malzeme keşfet.</p>
-</section>
-<footer>Kaynak: ders notları (DFT özet bilgilendirme dokümanı, Schrödinger denkleminden DFT'ye ders notu ve DFT tabanlı yüksek geçişli tarama raporu).</footer>
+<footer>Sources: F. Giustino, <i>Materials Modelling using Density Functional Theory</i> (Oxford University Press, 2014), Chapters 3, 4 and 9; D. S. Sholl and J. A. Steckel, <i>Density Functional Theory: A Practical Introduction</i> (Wiley), Chapters 1 and 3.</footer>
 </main>
 <script>
 (function(){
 var $=function(i){return document.getElementById(i)};
-// Üstel duvar
-function wall(){
-var p=+$('pc').value,np=+$('gr').value;
-$('pcv').textContent=p;
-var l=p*Math.log10(np);
-$('wall').innerHTML='10<sup>'+Math.round(l)+'</sup>';
-$('dft').textContent=np.toLocaleString('tr-TR');
+function gap(){
+var a=+$('ip').value,b=+$('ea').value,g=a-b;
+$('ipv').textContent=a.toFixed(1);$('eav').textContent=b.toFixed(1);
+$('gq').textContent=g.toFixed(1)+' eV';
+$('gk').textContent=Math.max(0,g*0.6).toFixed(1)+' eV';
 }
-$('pc').oninput=wall;$('gr').onchange=wall;wall();
-// SCF modeli
-function scf(){
-var a=+$('mx').value;
-$('mxv').textContent=a.toFixed(2).replace('.',',');
-var r=Math.abs(1-1.6*a),e=0.1,pts=[],it=null,N=30,tol=1e-6;
-for(var k=0;k<=N;k++){
-pts.push(e);
-if(it===null&&e<tol)it=k;
-e=Math.min(10,Math.max(1e-12,e*Math.max(r,1e-3)));
-}
-var W=400,H=190,L=34,B=20,T=8,lo=-9,hi=1,s='';
-function y(v){return T+(H-T-B)*(hi-Math.log10(v))/(hi-lo)}
-function x(k){return L+(W-L-8)*k/N}
-for(var g=-8;g<=0;g+=2){s+='<line x1="'+L+'" x2="'+(W-8)+'" y1="'+y(Math.pow(10,g))+'" y2="'+y(Math.pow(10,g))+'" stroke="var(--line)"/><text x="'+(L-4)+'" y="'+(y(Math.pow(10,g))+4)+'" text-anchor="end" font-size="10" fill="var(--mute)">1e'+g+'</text>'}
-s+='<line x1="'+L+'" x2="'+(W-8)+'" y1="'+y(tol)+'" y2="'+y(tol)+'" stroke="var(--ok)" stroke-dasharray="4 3"/><text x="'+(W-10)+'" y="'+(y(tol)-4)+'" text-anchor="end" font-size="10" fill="var(--ok)">tolerans</text>';
-s+='<polyline fill="none" stroke="var(--acc)" stroke-width="2.5" points="'+pts.map(function(v,k){return x(k)+','+y(v)}).join(' ')+'"/>';
-s+='<text x="'+((L+W)/2)+'" y="'+(H-4)+'" text-anchor="middle" font-size="10" fill="var(--mute)">SCF iterasyonu (0-30)</text>';
-$('plot').innerHTML=s;
-$('scfmsg').innerHTML=it!==null?'<b class="good">'+it+' iterasyonda yakınsadı.</b>'+(a<0.2?' Çok küçük α: yavaş ama güvenli.':''):'<b style="color:var(--bad)">30 iterasyonda yakınsamadı.</b>'+(a>1.25?' α çok büyük: hata her turda büyüyor.':' α çok küçük: hata çok yavaş azalıyor.');
-}
-$('mx').oninput=scf;scf();
-// Parsons
-function dg(){
-var v=+$('dg').value;
-$('dgv').textContent=(v>0?'+':v<0?'−':'')+Math.abs(v).toFixed(2).replace('.',',');
-var m;
-if(Math.abs(v)<=0.1001)m='<b class="good">İdeal bölge (|ΔG<sub>H</sub>| ≤ 0,1 eV):</b> hidrojen yeterince tutunur ve rahatça ayrılır. Tarama filtresini geçer.';
-else if(v<0)m='<b style="color:var(--bad)">Çok güçlü adsorpsiyon:</b> hidrojen yüzeye kilitlenir, ayrılamaz ve katalizör zehirlenir.';
-else m='<b style="color:var(--hot)">Çok zayıf adsorpsiyon:</b> protonlar yüzeye tutunamaz, reaksiyon başlamaz.';
-$('dgm').innerHTML=m;
-}
-$('dg').oninput=dg;dg();
+$('ip').oninput=gap;$('ea').oninput=gap;gap();
 })();
 </script>
 </body>
