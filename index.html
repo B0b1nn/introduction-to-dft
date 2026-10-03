@@ -3,35 +3,45 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>DFT lecture notes, Part 2: forces, functionals, pseudopotentials, band gaps</title>
+<title>Materials modelling with density functional theory: lecture notes</title>
 <style>
 :root{--bg:#f3f5f7;--card:#fff;--ink:#16202b;--mute:#5a6978;--line:#d5dce3;--acc:#2b59c3;--hot:#b8691a;--ok:#1f7a55;--bad:#b3392f}
 @media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0f1722;--card:#17212f;--ink:#e6ecf2;--mute:#9aa8b6;--line:#2a3646;--acc:#7fa6ff;--hot:#e0a15a;--ok:#5cc79a;--bad:#ef7f74}}
 *{box-sizing:border-box}
+html{scroll-behavior:smooth}
 body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
 main{max-width:760px;margin:0 auto;padding:0 20px 80px}
 h1,h2,h3{font-family:Georgia,"Times New Roman",serif;line-height:1.2}
-h1{font-size:clamp(1.9rem,6vw,2.8rem);margin:.2em 0 .3em}
-h2{font-size:1.6rem;margin:0 0 .5em}
-h3{font-size:1.12rem;margin:1.5em 0 .4em}
-header{padding:48px 0 24px;border-bottom:1px solid var(--line)}
+h1{font-size:clamp(2rem,6vw,3rem);margin:.2em 0 .3em}
+h2{font-size:1.65rem;margin:0 0 .5em}
+h3{font-size:1.15rem;margin:1.6em 0 .4em}
+header{padding:56px 0 28px;border-bottom:1px solid var(--line)}
 header p{color:var(--mute);max-width:60ch}
 nav{display:flex;flex-wrap:wrap;gap:8px 18px;padding:14px 0;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);border-bottom:1px solid var(--line);z-index:5;font-size:.92rem}
 nav a{color:var(--mute);text-decoration:none}
 nav a:hover,nav a:focus-visible{color:var(--acc);text-decoration:underline}
-section{padding:40px 0 6px;scroll-margin-top:60px}
+section{padding:44px 0 8px;scroll-margin-top:60px}
 p{max-width:68ch}
 .eq{font-family:Georgia,serif;font-style:italic;background:var(--card);border-left:4px solid var(--acc);padding:12px 16px;margin:16px 0;overflow-x:auto;white-space:nowrap}
 .box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px;margin:20px 0}
 .box h3{margin-top:0}
 label{display:block;font-size:.92rem;color:var(--mute);margin:12px 0 4px}
-input[type=range]{width:100%;accent-color:var(--acc)}
-.big{font:700 clamp(1.4rem,5vw,2.1rem)/1.1 Georgia,serif;color:var(--acc)}
-.tag{font-size:.85rem;color:var(--mute)}
+input[type=range],select{width:100%;accent-color:var(--acc)}
+select{padding:8px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:6px;font:inherit}
+.big{font:700 clamp(1.6rem,5vw,2.4rem)/1.1 Georgia,serif;color:var(--bad)}
 .good{color:var(--ok)}
+.step{display:grid;grid-template-columns:8.5em 1fr;gap:4px 14px;padding:12px 0;border-top:1px solid var(--line)}
+.step .k{font:700 .95rem Georgia,serif;color:var(--acc)}
+.step .lim{grid-column:2;color:var(--mute);font-size:.93rem}
+@media(max-width:520px){.step{grid-template-columns:1fr}.step .lim{grid-column:1}}
+.chain{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font:italic 1.2rem Georgia,serif;margin:14px 0}
+.chain .a{color:var(--mute);font-style:normal;font-size:.9rem}
+.bar{height:34px;border-radius:6px;background:var(--acc);color:#fff;display:flex;align-items:center;padding:0 12px;font-size:.92rem;margin:8px 0;white-space:nowrap;overflow:hidden}
 table{width:100%;border-collapse:collapse;font-size:.95rem;background:var(--card)}
 th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
 .wrap{overflow-x:auto}
+svg{width:100%;height:auto;display:block}
+.tag{font-size:.85rem;color:var(--mute)}
 footer{margin-top:50px;padding-top:18px;border-top:1px solid var(--line);color:var(--mute);font-size:.88rem}
 :focus-visible{outline:3px solid var(--acc);outline-offset:2px}
 </style>
@@ -39,111 +49,159 @@ footer{margin-top:50px;padding-top:18px;border-top:1px solid var(--line);color:v
 <body>
 <main>
 <header>
-<h1>DFT lecture notes, Part 2</h1>
-<p>Part 1 derived the Kohn-Sham equations and the SCF cycle. This part covers what is needed to turn them into real predictions: forces and equilibrium structures, the choice of exchange-correlation functional, pseudopotentials, and the most notorious failure of standard DFT, the band gap problem.</p>
+<h1>Materials modelling with density functional theory</h1>
+<p>Density functional theory (DFT) makes it possible to compute the electronic structure and many properties of materials from the laws of quantum mechanics and the atomic numbers alone. These notes follow the development of the theory from the many-body Schrödinger equation to the Kohn-Sham scheme, and then to practical calculations and applications.</p>
 </header>
 <nav aria-label="Sections">
-<a href="index.html">Part 1</a><a href="#forces">Forces</a><a href="#xc">Functionals</a><a href="#pp">Pseudopotentials</a><a href="#gap">Band gap problem</a><a href="#check">Checklist</a><a href="#gloss">Glossary</a>
+<a href="#intro">Introduction</a><a href="#wall">Exponential wall</a><a href="#approx">Approximations</a><a href="#dft">Hohenberg-Kohn</a><a href="#ks">Kohn-Sham and SCF</a><a href="#practice">Practical DFT</a><a href="#screen">Screening</a><a href="#limits">Limits</a><a href="part2.html">Part 2</a>
 </nav>
 
-<section id="forces">
-<h2>1. Forces and equilibrium structures</h2>
-<p>Part 1 held the nuclei fixed. To predict a structure we must let them move. Start from the full equation including nuclear kinetic energy −∑∇²<sub>I</sub>/2M<sub>I</sub> and nuclear repulsion. Because nuclei are much heavier than electrons, they stay close to their equilibrium positions while the electrons move around them. This is the <b>adiabatic (Born-Oppenheimer) approximation</b>: for each set of nuclear positions the electrons sit in their ground state, whose energy is E(R₁,…,R<sub>M</sub>).</p>
-<p>The nuclei then move on an effective potential energy surface:</p>
-<div class="eq">U(R₁,…,R<sub>M</sub>) = ½ ∑<sub>I≠J</sub> Z<sub>I</sub>Z<sub>J</sub>/|R<sub>I</sub> − R<sub>J</sub>| + E(R₁,…,R<sub>M</sub>)</div>
-<p>The nuclear wavefunction is far more compact than the electronic one, so for equilibrium structures (except for the lightest elements such as hydrogen) the nuclei can be treated as classical point particles. Replacing the nuclear momentum by its classical counterpart gives Newton's law:</p>
-<div class="eq">M<sub>I</sub> d²R<sub>I</sub>/dt² = −∂U/∂R<sub>I</sub> = F<sub>I</sub></div>
-<p>The force on a nucleus can be evaluated with classical electrostatics: it is the Coulomb force exerted on that nucleus by the other nuclei and by the electron density n(r) (the Hellmann-Feynman, or electrostatic, theorem). So one SCF calculation gives both the energy and all forces.</p>
-<h3>Finding the structure</h3>
-<p>The equilibrium structure is where the net force on every nucleus vanishes, F<sub>I</sub> = 0. In practice one runs an SCF calculation, evaluates the forces, moves the atoms downhill in energy, and repeats until the forces are below a threshold. Cell shape and volume can be optimised too. This is why DFT can predict lattice parameters and bond lengths without experimental input.</p>
+<section id="intro">
+<h2>Introduction: modelling from first principles</h2>
+<p>Materials modelling is the use of mathematical models to describe and predict material properties quantitatively. A model is said to be <em>from first principles</em> (<em>ab initio</em>) when it uses no empirical input: only the Schrödinger equation, the periodic table and a computer. This contrasts with top-down approaches, in which parameters are fitted to experimental data.</p>
+<p>At the atomic scale, a material is a set of electrons and nuclei interacting through the Coulomb force. Reasons for the popularity of DFT include its transferability (one method for molecules, solids, surfaces and interfaces), the simple single-particle picture it yields, and predictions that match many measurements to within a few percent.</p>
+<p>Typical successes discussed in Giustino's text include the structure of detonation nanodiamonds ("bucky diamonds"), the heat capacity of MgB₂ (calculated T<sub>c</sub> = 39.4 K against the measured 39 K), a lower bound of 6,670 K for the temperature at the Earth's inner-core boundary, and crack propagation in a 174,752-atom silicon model.</p>
 </section>
 
-<section id="xc">
-<h2>2. Choosing an exchange-correlation functional</h2>
-<p>The Hohenberg-Kohn theorem guarantees that an exact functional exists but does not say what it is. Every practical calculation therefore uses an approximation, and results depend on the choice, so the functional used must always be stated (not just "a DFT calculation").</p>
-<div class="wrap"><table>
-<tr><th>Level</th><th>Ingredients</th><th>Comments</th></tr>
-<tr><td>LDA</td><td>Local density n(r) only; each volume element treated as a homogeneous electron gas.</td><td>Simple and surprisingly good for structures. Its V<sub>xc</sub> is a continuous function of density (relevant to band gaps, Section 4).</td></tr>
-<tr><td>GGA</td><td>n(r) and its gradient |∇n|.</td><td>Many different GGAs exist because the gradient can be included in many ways. Widely used in solids: PW91 and PBE. More information does not guarantee higher accuracy.</td></tr>
-<tr><td>Beyond GGA</td><td>Additional physical information.</td><td>A hierarchy of functionals gradually adds more detail; treat these as refinements, with higher cost.</td></tr>
-</table></div>
-<p>Two corrections that sit on top of Kohn-Sham DFT are worth knowing by name: <b>GW</b> quasiparticle corrections for band gaps, and <b>dynamical mean-field theory (DMFT)</b> for Mott-Hubbard insulators with localised d or f electrons. Both start from the Kohn-Sham eigenvalues and eigenfunctions.</p>
-</section>
-
-<section id="pp">
-<h2>3. Plane waves, cutoffs and pseudopotentials</h2>
-<p>Periodic solids are modelled with a supercell. By Bloch's theorem each solution is a plane wave times a function with the cell's periodicity, and the periodic part is expanded in plane waves exp[iG·r]. The expansion is truncated at a cutoff energy E<sub>cut</sub> = ħ²G²<sub>cut</sub>/2m, which must be converged.</p>
-<p>The difficulty is the core electrons. Tightly bound core states oscillate on very short length scales and would need a very large cutoff. But bonding and most material properties are governed by the valence electrons. A <b>pseudopotential</b> replaces the core electrons by a smooth effective potential, so only the valence electrons are treated explicitly. This is the <b>frozen core approximation</b>; calculations without it are called <b>all-electron</b> and are used far less widely.</p>
-<ul>
-<li><b>Transferability:</b> a pseudopotential made from an isolated atom should work in any chemical environment without adjustment. DFT codes ship libraries with one for most elements.</li>
-<li><b>Hard vs soft:</b> a hard pseudopotential needs a high cutoff, a soft one a low cutoff. Vanderbilt's ultrasoft pseudopotentials (USPPs) need substantially lower cutoffs, at the price of more empirical construction parameters.</li>
-<li>Each pseudopotential defines a minimum cutoff for the atoms it describes. When energies of different systems are compared (for example fcc Pd, fcc Cu and a bcc CuPd alloy), use the same, highest required cutoff in all of them.</li>
-</ul>
-</section>
-
-<section id="gap">
-<h2>4. Band structures and the band gap problem</h2>
-<p>The Kohn-Sham eigenvalues εᵢ(k) form the band structure. In a metal the next available state lies infinitesimally above the highest occupied one; in a semiconductor or insulator there is a finite energy difference, the band gap. In Kohn-Sham theory:</p>
-<div class="eq">E<sub>g</sub><sup>KS</sup> = ε<sub>CBB</sub> − ε<sub>VBT</sub> &nbsp; (conduction-band bottom minus valence-band top)</div>
-<p>Experiments measure something different: the <b>quasiparticle (electrical) gap</b>, built from total energies of the neutral system and of the system with one electron removed or added (E<sub>N−1</sub>, E<sub>N</sub>, E<sub>N+1</sub>):</p>
-<div class="eq">E<sub>g</sub><sup>qp</sup> = (E<sub>N−1</sub> − E<sub>N</sub>) − (E<sub>N</sub> − E<sub>N+1</sub>) = IP − EA</div>
-<p>The first bracket is the ionisation potential (work function in a solid), the second the electron affinity. For a small molecule one can compute this directly from three total-energy calculations (the ΔSCF method). In a solid, adding one electron to about 10²⁰ changes the density by a negligible amount, and taking that limit gives:</p>
-<div class="eq">E<sub>g</sub><sup>qp</sup> = E<sub>g</sub><sup>KS</sup> + Δ<sub>xc</sub> , &nbsp; Δ<sub>xc</sub> = lim [V<sub>xc</sub>(n + Δn) − V<sub>xc</sub>(n − Δn)]</div>
-<p>With the exact functional, V<sub>xc</sub> jumps discontinuously when an electron is added, so Δ<sub>xc</sub> ≠ 0. LDA, by construction, has a continuous V<sub>xc</sub>, so Δ<sub>xc</sub> = 0 and the gap cannot come out right. As a rule of thumb, Kohn-Sham gaps underestimate measured ones by about 40%; errors above 1 eV are common. GW quasiparticle calculations built on the Kohn-Sham solution fix most of this.</p>
+<section id="wall">
+<h2>The many-body problem and the exponential wall</h2>
+<p>In Hartree atomic units (ħ = mₑ = e = 4πε₀ = 1; 1 bohr = 0.529177 Å, 1 Ha = 27.2114 eV), and with nuclei held fixed because Mᵢ ≥ 1836 mₑ (clamped-nuclei approximation), the electronic problem reads:</p>
+<div class="eq">[ −½ ∑ ∇ᵢ² + ∑ Vₙ(rᵢ) + ½ ∑ 1/|rᵢ − rⱼ| ] Ψ(r₁,…,r_N) = E Ψ</div>
+<p>Discretising space on a uniform mesh, the wavefunction of N electrons and M nuclei requires N<sub>p</sub><sup>N+M</sup> complex numbers. For the silicon unit cell (volume a³/4 with a = 5.43 Å) a spacing of about 0.1 Å gives N<sub>p</sub> ≈ 40,000 points; with 8 valence electrons and 2 nuclei (10 particles) this amounts to about 10⁴⁶ numbers. The cost grows exponentially with system size, hence the name <em>exponential wall</em>.</p>
 <div class="box">
-<h3>Quasiparticle gap from total energies</h3>
-<p class="tag">Made-up numbers for illustration (ΔSCF idea for a small system). The "40%" estimate is only a rule of thumb.</p>
-<label for="ip">Ionisation potential E<sub>N−1</sub> − E<sub>N</sub>: <b id="ipv">8.0</b> eV</label>
-<input type="range" id="ip" min="4" max="14" step="0.1" value="8">
-<label for="ea">Electron affinity E<sub>N</sub> − E<sub>N+1</sub>: <b id="eav">2.0</b> eV</label>
-<input type="range" id="ea" min="0" max="5" step="0.1" value="2">
-<p style="margin:14px 0 0">Quasiparticle gap IP − EA: <span class="big" id="gq">6.0 eV</span></p>
-<p style="margin:6px 0 0">A Kohn-Sham gap about 40% too small would read roughly <b id="gk" class="good">3.6 eV</b>.</p>
+<h3>Exponential wall calculator</h3>
+<label for="pc">Number of particles (electrons + nuclei): <b id="pcv">10</b></label>
+<input type="range" id="pc" min="1" max="20" value="10">
+<label for="gr">Grid spacing (cell volume fixed)</label>
+<select id="gr"><option value="5000">0.2 Å → 5,000 points</option><option value="40000" selected>0.1 Å → 40,000 points</option><option value="320000">0.05 Å → 320,000 points</option></select>
+<p style="margin:16px 0 0">Complex numbers needed to store Ψ: <span class="big" id="wall">10<sup>46</sup></span></p>
+<p style="margin:6px 0 0">Numbers needed to store the density n(r): <b class="good" id="dft">40,000</b></p>
 </div>
-<p>Practical consequence: standard DFT should not be the final judge when exact absorption or emission thresholds matter (LEDs, solar cells, photodiodes); post-DFT corrections are needed there. Also, for optical spectra the electronic excitations are outside ground-state DFT altogether.</p>
 </section>
 
-<section id="check">
-<h2>5. Checklist for a trustworthy calculation</h2>
+<section id="approx">
+<h2>Single-particle approximations</h2>
+<div class="step"><div class="k">Independent electrons</div><div>Neglect electron-electron repulsion: Ψ = φ₁φ₂…φ_N and E = ∑εᵢ.</div><div class="lim">Limitation: the Coulomb repulsion is ignored entirely.</div></div>
+<div class="step"><div class="k">Exclusion principle</div><div>Electrons are identical fermions, so Ψ must change sign when two electrons are exchanged. A Slater determinant of the φᵢ enforces this; the density is n(r) = ∑|φᵢ(r)|².</div></div>
+<div class="step"><div class="k">Mean field (Hartree)</div><div>Each electron moves in the average electrostatic potential of the others, V<sub>H</sub>(r) = ∫ n(r′)/|r − r′| dr′, equivalent to ∇²V<sub>H</sub> = −4πn.</div><div class="lim">Limitation: no exchange and no correlation.</div></div>
+<div class="step"><div class="k">Hartree-Fock</div><div>Minimising the energy of a Slater determinant adds the Fock exchange potential V<sub>X</sub>(r, r′) = −∑ⱼ φⱼ*(r′)φⱼ(r)/|r − r′|, which is non-local.</div><div class="lim">Limitation: electron correlation is still missing.</div></div>
+<div class="step"><div class="k">Kohn-Sham</div><div>Work with the density instead of the wavefunction; see the next two sections.</div></div>
+</section>
+
+<section id="dft">
+<h2>The Hohenberg-Kohn theorem</h2>
+<p>The ground-state energy is a functional of the density alone, E = F[n]. Although Ψ depends on 3N variables, n(r) depends on only three. The result follows from three premises:</p>
+<div class="chain"><span>n</span><span class="a">determines</span><span>Vₙ</span><span class="a">determines</span><span>Ψ</span><span class="a">determines</span><span>E</span></div>
+<p>The second and third links are straightforward. The first, n → Vₙ, is proved by <em>reductio ad absurdum</em>. Suppose two potentials Vₙ ≠ Vₙ′ gave the same ground-state density n, with ground-state energies E and E′. Since Ψ is not the ground state of Vₙ′, and vice versa:</p>
+<div class="eq">E + ∫ n (Vₙ′ − Vₙ) dr &gt; E′ &nbsp; and &nbsp; E′ + ∫ n (Vₙ − Vₙ′) dr &gt; E</div>
+<p>Adding the two inequalities gives E + E′ &gt; E + E′, a contradiction. Hence the density fixes the external potential uniquely. A second statement, the variational principle, says the true density minimises E[n], i.e. δE/δn = 0 at n₀. For excited states the full wavefunction is still needed.</p>
+<p><em>Remark.</em> A functional maps a function to a number (a definite integral is the simplest example). The functional derivative δE/δn measures how E responds to a small local change in the whole function n(r).</p>
+</section>
+
+<section id="ks">
+<h2>Kohn-Sham equations, LDA and self-consistency</h2>
+<p>Kohn and Sham mapped the interacting system onto a fictitious non-interacting one with the same ground-state density. All unknown many-body effects are collected in the exchange-correlation functional E<sub>xc</sub>[n]:</p>
+<div class="eq">[ −½∇² + Vₙ(r) + V<sub>H</sub>(r) + V<sub>xc</sub>(r) ] φᵢ(r) = εᵢ φᵢ(r) &nbsp;,&nbsp; V<sub>xc</sub> = δE<sub>xc</sub>/δn</div>
+<p>The exact E<sub>xc</sub> is unknown. In the <b>local density approximation (LDA)</b> each volume element dr contributes the exchange-correlation energy of a homogeneous electron gas (HEG) at the local density n(r). The exchange part is analytic, E<sub>x</sub> = −¾(3/π)<sup>1/3</sup> ∫ n<sup>4/3</sup> dr, giving V<sub>x</sub> = −(3/π)<sup>1/3</sup> n<sup>1/3</sup>. The correlation part is parametrised from the quantum Monte Carlo data of Ceperley and Alder (Perdew-Zunger form, in terms of the Wigner-Seitz radius r<sub>s</sub>). For densities typical of semiconductors the correlation energy is about an order of magnitude smaller than the exchange energy.</p>
+<h3>Self-consistent field (SCF) cycle</h3>
+<p>V<sub>H</sub> and V<sub>xc</sub> depend on n, and n depends on the φᵢ, so the equations must be solved self-consistently:</p>
 <ol>
-<li>Choose and <b>state the functional</b> (LDA, PBE, ...).</li>
-<li><b>Converge k points</b> before a series of calculations; report them. Compare supercells at comparable k-point density.</li>
-<li><b>Converge E<sub>cut</sub></b>; use one common cutoff when comparing energies.</li>
-<li>Check the <b>pseudopotentials</b> are appropriate for the elements and the property.</li>
-<li>Make sure the <b>SCF cycle converges</b> to a tight tolerance, then relax until forces are small.</li>
-<li>Ask whether the property is a <b>ground-state property</b>. If it is a band gap, an excited-state, van der Waals or strongly correlated d/f problem, expect a systematic error and consider GW, DFT+U/DMFT or dispersion corrections.</li>
+<li>Fix the nuclear positions, compute Vₙ, and guess n(r), for example by superposing isolated-atom densities.</li>
+<li>Compute V<sub>H</sub> (Poisson equation) and V<sub>xc</sub>; form V<sub>tot</sub> = Vₙ + V<sub>H</sub> + V<sub>xc</sub>.</li>
+<li>Solve the Kohn-Sham eigenvalue problem for φᵢ and εᵢ.</li>
+<li>Build the new density n<sub>new</sub> = ∑|φᵢ|².</li>
+<li>If n<sub>new</sub> and n<sub>old</sub> agree within the tolerance (in practice, often the total energies of successive iterations are compared), stop. Otherwise mix the densities and return to step 2.</li>
 </ol>
+<div class="box">
+<h3>Effect of the mixing parameter</h3>
+<p class="tag">Illustrative model, not a real calculation: the error is multiplied by a fixed factor at each iteration.</p>
+<label for="mx">Mixing parameter α: <b id="mxv">0.30</b></label>
+<input type="range" id="mx" min="0.05" max="1.5" step="0.05" value="0.3">
+<svg id="plot" viewBox="0 0 400 190" role="img" aria-label="SCF error versus iteration"></svg>
+<p id="scfmsg" style="margin:6px 0 0"></p>
+</div>
 </section>
 
-<section id="gloss">
-<h2>Glossary</h2>
+<section id="practice">
+<h2>Practical calculations (Sholl and Steckel)</h2>
+<p>Real calculations on crystals use a periodic <em>supercell</em>. By Bloch's theorem the solutions have the form φ<sub>k</sub>(r) = exp(ik·r) u<sub>k</sub>(r), where u<sub>k</sub> has the periodicity of the cell and is expanded in plane waves. Two numerical parameters follow, and both must be converged:</p>
 <div class="wrap"><table>
-<tr><th>Term</th><th>Meaning</th></tr>
-<tr><td>Ab initio</td><td>Calculation from first principles, without fitted parameters.</td></tr>
-<tr><td>Atomic units</td><td>ħ = mₑ = e = 4πε₀ = 1; length in bohr, energy in hartree.</td></tr>
-<tr><td>Born-Oppenheimer</td><td>Nuclei treated as slow; electrons stay in their ground state for each nuclear geometry.</td></tr>
-<tr><td>Exchange energy</td><td>Energy lowering from the antisymmetry of the wavefunction (Pauli principle).</td></tr>
-<tr><td>Correlation energy</td><td>Remaining many-electron effects beyond exchange (electrons avoiding each other).</td></tr>
-<tr><td>Functional</td><td>A map from a function (e.g. n(r)) to a number (e.g. energy).</td></tr>
-<tr><td>HEG</td><td>Homogeneous electron gas, the model system behind LDA.</td></tr>
-<tr><td>SCF</td><td>Self-consistent field: iterate until input and output density agree.</td></tr>
-<tr><td>Supercell, k points</td><td>Periodic simulation cell; sampling points in the Brillouin zone.</td></tr>
-<tr><td>Frozen core</td><td>Core electrons fixed and replaced by a pseudopotential.</td></tr>
-<tr><td>Quasiparticle gap</td><td>Experimental electrical gap, IP − EA.</td></tr>
+<tr><th>Parameter</th><th>Meaning</th><th>Good practice</th></tr>
+<tr><td>k points</td><td>Sampling of the Brillouin zone for integrals in reciprocal space.</td><td>Test convergence before a series of calculations; report the k points used. Larger supercells need fewer. Metals need special treatment.</td></tr>
+<tr><td>Cutoff energy</td><td>The plane-wave sum is truncated at E<sub>cut</sub> = ħ²G²<sub>cut</sub>/2m.</td><td>Report E<sub>cut</sub>. When comparing energies of different systems, use the same cutoff in all calculations (the largest one required).</td></tr>
 </table></div>
+<p>Finding an equilibrium structure means iterating until the forces on the nuclei vanish. The nuclei are treated as classical point particles, and the force on nucleus I is F<sub>I</sub> = −∂U/∂R<sub>I</sub>.</p>
 </section>
-<footer>Sources: F. Giustino, <i>Materials Modelling using Density Functional Theory</i> (Oxford University Press, 2014), Chapters 3, 4 and 9; D. S. Sholl and J. A. Steckel, <i>Density Functional Theory: A Practical Introduction</i> (Wiley), Chapters 1 and 3.</footer>
+
+<section id="screen">
+<h2>Application: computational screening of catalysts</h2>
+<p>Hydrogen can be produced by the hydrogen evolution reaction, with platinum the best catalyst but also very rare and expensive. Greeley et al. (2006) searched for alternatives using a descriptor: the Gibbs energy of hydrogen adsorption ΔG<sub>H</sub>. Following Parsons, activity is maximised when |ΔG<sub>H</sub>| is close to zero; for Pt, ΔG<sub>H</sub> = −0.1 eV.</p>
+<div class="box">
+<h3>Adsorption energy and catalytic activity</h3>
+<label for="dg">ΔG<sub>H</sub> = <b id="dgv">−0.10</b> eV</label>
+<input type="range" id="dg" min="-0.6" max="0.6" step="0.05" value="-0.1">
+<p id="dgm" style="margin:8px 0 0"></p>
+</div>
+<div class="bar" style="width:100%">736 binary alloys of 16 transition metals (surface solute/host ratio 1:3)</div>
+<div class="bar" style="width:62%">Promising activity: |ΔG<sub>H</sub>| ≤ 0.1 eV (49 combinations in the subset shown in the text)</div>
+<div class="bar" style="width:34%">Stability analysis leaves a handful of candidates</div>
+<p>Stability was assessed through Gibbs energies of degradation processes (solute segregation, oxidation, corrosion). The alloy BiPt was then synthesised, and its measured catalytic activity exceeded that of pure Pt, as predicted. The lesson is that DFT can screen even hypothetical materials before synthesis.</p>
+</section>
+
+<section id="limits">
+<h2>Scope and limitations</h2>
+<p>DFT addresses the electronic ground state. Because the exact functional is unknown, practical results carry an intrinsic uncertainty that is often assessed only by comparison with experiment.</p>
+<div class="wrap"><table>
+<tr><th>Calculated reliably</th><th>Problematic cases</th></tr>
+<tr><td>Equilibrium structures and lattice parameters</td><td><b>Band gaps</b> of semiconductors and insulators are underestimated; errors above 1 eV are common, and even the exact Kohn-Sham functional has this problem. Remedy: quasiparticle (GW) corrections.</td></tr>
+<tr><td>Binding energies and cohesive energies</td><td><b>Mott-Hubbard insulators</b> with localised d or f states. Remedy: dynamical mean-field theory.</td></tr>
+<tr><td>Vibrations and vibrational spectra</td><td><b>van der Waals forces</b> arise from long-range correlation and are poorly described by standard functionals (sparse matter, proteins).</td></tr>
+<tr><td>Ionisation potentials, electron affinities, band structures of metals and semiconductors</td><td><b>Excited states</b>: the Hohenberg-Kohn theorems apply to the ground state only.</td></tr>
+</table></div>
+<p>Cost is a further limit: calculations with tens of atoms are routine, hundreds of atoms are challenging, and a thousand or more are restricted to specialised groups with very large computers. Even where DFT is inaccurate, the Kohn-Sham eigenvalues and eigenfunctions remain a useful starting point for more refined methods.</p>
+</section>
+<footer>Sources: F. Giustino, <i>Materials Modelling using Density Functional Theory: Properties and Predictions</i> (Oxford University Press, 2014); D. S. Sholl and J. A. Steckel, <i>Density Functional Theory: A Practical Introduction</i> (Wiley). Original papers cited in the text: Hohenberg and Kohn (1964), Kohn and Sham (1965), Greeley et al. (2006).</footer>
 </main>
 <script>
 (function(){
 var $=function(i){return document.getElementById(i)};
-function gap(){
-var a=+$('ip').value,b=+$('ea').value,g=a-b;
-$('ipv').textContent=a.toFixed(1);$('eav').textContent=b.toFixed(1);
-$('gq').textContent=g.toFixed(1)+' eV';
-$('gk').textContent=Math.max(0,g*0.6).toFixed(1)+' eV';
+function wall(){
+var p=+$('pc').value,np=+$('gr').value;
+$('pcv').textContent=p;
+$('wall').innerHTML='10<sup>'+Math.round(p*Math.log10(np))+'</sup>';
+$('dft').textContent=np.toLocaleString('en-US');
 }
-$('ip').oninput=gap;$('ea').oninput=gap;gap();
+$('pc').oninput=wall;$('gr').onchange=wall;wall();
+function scf(){
+var a=+$('mx').value;
+$('mxv').textContent=a.toFixed(2);
+var r=Math.abs(1-1.6*a),e=0.1,pts=[],it=null,N=30,tol=1e-6;
+for(var k=0;k<=N;k++){
+pts.push(e);
+if(it===null&&e<tol)it=k;
+e=Math.min(10,Math.max(1e-12,e*Math.max(r,1e-3)));
+}
+var W=400,H=190,L=34,B=20,T=8,lo=-9,hi=1,s='';
+function y(v){return T+(H-T-B)*(hi-Math.log10(v))/(hi-lo)}
+function x(k){return L+(W-L-8)*k/N}
+for(var g=-8;g<=0;g+=2){var yy=y(Math.pow(10,g));s+='<line x1="'+L+'" x2="'+(W-8)+'" y1="'+yy+'" y2="'+yy+'" stroke="var(--line)"/><text x="'+(L-4)+'" y="'+(yy+4)+'" text-anchor="end" font-size="10" fill="var(--mute)">1e'+g+'</text>'}
+s+='<line x1="'+L+'" x2="'+(W-8)+'" y1="'+y(tol)+'" y2="'+y(tol)+'" stroke="var(--ok)" stroke-dasharray="4 3"/><text x="'+(W-10)+'" y="'+(y(tol)-4)+'" text-anchor="end" font-size="10" fill="var(--ok)">tolerance</text>';
+s+='<polyline fill="none" stroke="var(--acc)" stroke-width="2.5" points="'+pts.map(function(v,k){return x(k)+','+y(v)}).join(' ')+'"/>';
+s+='<text x="'+((L+W)/2)+'" y="'+(H-4)+'" text-anchor="middle" font-size="10" fill="var(--mute)">SCF iteration (0-30)</text>';
+$('plot').innerHTML=s;
+$('scfmsg').innerHTML=it!==null?'<b class="good">Converged after '+it+' iterations.</b>'+(a<0.2?' Very small α: slow but safe.':''):'<b style="color:var(--bad)">Not converged within 30 iterations.</b>'+(a>1.25?' α too large: the error grows at every step.':' α too small: the error decreases too slowly.');
+}
+$('mx').oninput=scf;scf();
+function dg(){
+var v=+$('dg').value;
+$('dgv').textContent=(v>0?'+':v<0?'−':'')+Math.abs(v).toFixed(2);
+var m;
+if(Math.abs(v)<=0.1001)m='<b class="good">Favourable region (|ΔG<sub>H</sub>| ≤ 0.1 eV):</b> hydrogen binds enough to adsorb yet can still leave the surface. The alloy passes the activity filter.';
+else if(v<0)m='<b style="color:var(--bad)">Binding too strong:</b> hydrogen remains on the surface and poisons the catalyst.';
+else m='<b style="color:var(--hot)">Binding too weak:</b> protons do not adsorb and the reaction does not start.';
+$('dgm').innerHTML=m;
+}
+$('dg').oninput=dg;dg();
 })();
 </script>
 </body>
